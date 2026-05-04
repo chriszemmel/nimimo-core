@@ -1,0 +1,142 @@
+{
+  "id": 9,
+  "slug": "ready-to-launch",
+  "title": "Ready to Launch",
+  "subtitle": "What it feels like when the thing you built actually works.",
+  "description": "nimimo scored 90/100 on its security audit. The architecture is sound. So why are we still tweaking borders?",
+  "author": "nimimo",
+  "publishedAt": "2026-04-02",
+  "tags": ["launch", "vision", "security"],
+  "cta": {
+    "text": "Try it yourself",
+    "href": "/auth/login"
+  },
+  "sections": [
+    {
+      "type": "paragraph",
+      "content": "We ran a full security audit on nimimo last week. Static analysis, architecture review, cryptographic implementation, dependency scanning - the whole codebase, top to bottom. It came back 90 out of 100."
+    },
+    {
+      "type": "paragraph",
+      "content": "All critical findings resolved. All high-severity issues closed. PBKDF2 at 600,000 iterations with separate salt. Ownership authorization on every route. Nonce-based Content Security Policy. Rate limiting on three tiers. 124 automated tests. A published SDK. The server cannot steal your funds even in a full database breach - that is architecturally guaranteed, not a policy promise."
+    },
+    {
+      "type": "paragraph",
+      "content": "And yet here we are, adjusting the border radius on a carousel."
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "content": "The last mile is not technical"
+    },
+    {
+      "type": "paragraph",
+      "content": "There is a particular kind of hesitation that sets in when the hard problems are solved. You have spent months building an encryption system that generates keys on-device and never transmits them. You have a recovery card that lets people back up their wallet by printing a PDF. You have a name resolution system that turns @neat-gecko into Bitcoin, Ethereum, and Solana addresses in one API call."
+    },
+    {
+      "type": "paragraph",
+      "content": "And then you find yourself spending an afternoon deciding whether the template preview should have a gradient fade or a hard cut."
+    },
+    {
+      "type": "paragraph",
+      "content": "This is not procrastination. This is the part where you realize the thing works, and now it has to feel right too. The architecture can be flawless and still lose someone because a button felt off, or a flow made them pause for a second too long."
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "content": "What the audit actually found"
+    },
+    {
+      "type": "paragraph",
+      "content": "The full audit is public - you can read it at nimimo.com/audit. But here is the summary: nimimo's core security property is that the server is structurally unable to access your funds. Your private keys generate in the browser, get encrypted with a device-bound key derived via PBKDF2-SHA256 (600,000 iterations), and never leave your device. A full server compromise would expose email addresses and public blockchain addresses. Nothing else."
+    },
+    {
+      "type": "paragraph",
+      "content": "The 10 points we did not score come down to honest constraints. There is no formal third-party penetration test - those cost $30k-$100k and are not feasible for a solo-built project at this stage. The device encryption key in IndexedDB is not itself encrypted (every browser wallet makes this tradeoff). JavaScript cannot guarantee memory is zeroed after use. These are real limitations, and we document them instead of hiding them."
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "content": "The full security audit, methodology, threat model, and \"why not 100\" breakdown is published at nimimo.com/audit. We believe transparency about security does not require open-sourcing the codebase."
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "content": "It is almost too simple"
+    },
+    {
+      "type": "paragraph",
+      "content": "Here is what nimimo does. You sign up with an email. A wallet generates on your device. You get a name like @lucky-mountain. You share your link. Someone opens it, picks their chain, and sends from whatever wallet they already have. That is the entire product."
+    },
+    {
+      "type": "paragraph",
+      "content": "No seed phrases thrown at you before you understand what they are. No KYC. No extension to install. No chain to choose. You do not need to know what a private key is to use one. You do not need to understand gas fees to receive Ethereum."
+    },
+    {
+      "type": "paragraph",
+      "content": "There is something unsettling about that. Crypto has conditioned us to expect complexity as proof of seriousness. If it is not hard to use, it must be cutting corners. If there is no 12-word ritual, something must be missing."
+    },
+    {
+      "type": "paragraph",
+      "content": "Nothing is missing. The complexity is still there - it is just not your problem anymore. The same BIP-39 mnemonic, the same HD derivation paths, the same elliptic curve cryptography that powers every hardware wallet. We moved the burden from the user to the system. That is the entire thesis."
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "content": "What we actually built"
+    },
+    {
+      "type": "paragraph",
+      "content": "nimimo separates four things that every other wallet tangles together: Access (how you log in), Identity (your human-readable name), Ownership (your cryptographic keys), and Recovery (how you restore after loss). Losing access does not mean losing ownership. Your identity persists across key rotations. Recovery does not require a custodian."
+    },
+    {
+      "type": "paragraph",
+      "content": "That separation is the architecture. Everything else - the 20 profile templates, the multi-chain send flow, the TypeScript SDK, the public resolution API - is built on top of it. The foundation is what matters."
+    },
+    {
+      "type": "list",
+      "items": [
+        "Client-side HD wallet with BIP-39/BIP-32/BIP-44 derivation",
+        "AES-256-GCM encryption with device-bound keys (PBKDF2, 600k iterations)",
+        "Bitcoin (P2WPKH), Ethereum (EIP-55), Solana (Ed25519) from a single seed",
+        "Encrypted recovery PDF with branded QR code and physical separation design",
+        "Public resolution API and published TypeScript SDK (@nimimo/resolve)",
+        "90/100 security audit with full transparency at nimimo.com/audit"
+      ]
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "content": "Still tweaking"
+    },
+    {
+      "type": "paragraph",
+      "content": "We are still making small adjustments. A carousel instead of a scroll. A copy button on a code block. Whether a recipient's cached balance should invalidate immediately after receiving a payment (it should - and now it does). These are not big decisions. But they are the decisions that determine whether someone finishes the flow or drops off."
+    },
+    {
+      "type": "paragraph",
+      "content": "The security is done. The cryptography is done. The architecture is done. What remains is the feeling. Does it feel like something you would trust with money? Does it feel like something you would send to your friend who has never used crypto?"
+    },
+    {
+      "type": "paragraph",
+      "content": "We think it does. We are close enough to see it."
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "content": "What launch means"
+    },
+    {
+      "type": "paragraph",
+      "content": "Launch does not mean finished. It means ready. Ready for people to sign up, get a name, and receive their first crypto payment through a link they can actually share. Ready for developers to resolve handles through the API. Ready for the architecture to prove itself under real use."
+    },
+    {
+      "type": "paragraph",
+      "content": "We built nimimo because we believe good systems adapt to humans, not the other way around. Crypto is powerful technology trapped behind terrible UX. The fix is not to dumb it down or hand custody to a company. The fix is to build the layer that was always missing - the one that makes it feel like something normal people would use."
+    },
+    {
+      "type": "paragraph",
+      "content": "That layer is ready."
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+cff-version: 1.2.0
+title: "nimimo: Non-custodial crypto identity for humans"
+message: >-
+  If you use this software, the four-axis decomposition, or the
+  sixteen-state taxonomy, please cite it as below.
+type: software
+authors:
+  - given-names: Chris
+    family-names: Zemmel
+    email: chris@nimimo.com
+    website: "https://nimimo.com"
+    affiliation: Independent
+repository-code: "https://github.com/chriszemmel/nimimo-core"
+url: "https://nimimo.com"
+abstract: >-
+  nimimo is a non-custodial cryptographic identity system that
+  separates four independent axes - Access, Identity, Ownership,
+  and Recovery - into distinct, replaceable layers. Keys are
+  generated client-side and never transmitted to the server. The
+  accompanying architecture papers introduce a sixteen-state
+  taxonomy of cryptographic identity systems and formalize the
+  Separated Full State (1,1,1,1) as the only configuration in
+  which all four axes coexist without collapsing into each other.
+keywords:
+  - non-custodial
+  - cryptographic-identity
+  - wallet
+  - bip39
+  - bip32
+  - bitcoin
+  - ethereum
+  - solana
+  - capability-based-security
+  - four-axis-architecture
+  - sixteen-state-taxonomy
+license: AGPL-3.0-or-later
+license-url: "https://www.gnu.org/licenses/agpl-3.0.html"
+version: "1.2.4"
+date-released: "2026-05-04"
+preferred-citation:
+  type: software
+  title: "nimimo: Non-custodial crypto identity for humans"
+  authors:
+    - given-names: Chris
+      family-names: Zemmel
+  year: 2026
+  url: "https://github.com/chriszemmel/nimimo-core"
+  notes: >-
+    The four-axis decomposition (Access / Identity / Ownership /
+    Recovery) and the sixteen-state taxonomy of cryptographic
+    identity systems were introduced in the architecture papers
+    in docs/architecture/.

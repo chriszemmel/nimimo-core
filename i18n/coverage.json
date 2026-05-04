@@ -1,0 +1,18 @@
+{
+  "_comment": "Declares the required coverage per locale. The i18n check in scripts/i18n-check.js reads this file and enforces that every key in en.json (the source of truth) is also present in each locale's catalog, restricted to the namespaces listed here. Coverage 'full' means every namespace. Coverage 'partial' means only the listed namespaces must be present - the rest fall back to English via the deep-merge in i18n/request.ts.",
+  "defaultLocale": "en",
+  "locales": {
+    "en": {
+      "coverage": "full"
+    },
+    "de": {
+      "coverage": "full"
+    },
+    "zh": {
+      "coverage": "full"
+    },
+    "es": {
+      "coverage": "full"
+    }
+  }
+}

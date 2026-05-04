@@ -1,0 +1,56 @@
+{
+  "bitcoin": [
+    {
+      "name": "Alchemy",
+      "url": "https://bitcoin-mainnet.g.alchemy.com/v2",
+      "priority": 1,
+      "requiresApiKey": true
+    },
+    {
+      "name": "Blockstream",
+      "url": "https://blockstream.info/api",
+      "priority": 2
+    },
+    {
+      "name": "Blockcypher",
+      "url": "https://api.blockcypher.com/v1/btc/main",
+      "priority": 3
+    }
+  ],
+  "ethereum": [
+    {
+      "name": "Alchemy",
+      "url": "https://eth-mainnet.g.alchemy.com/v2",
+      "priority": 1,
+      "requiresApiKey": true
+    },
+    {
+      "name": "1RPC",
+      "url": "https://1rpc.io/eth",
+      "priority": 2
+    },
+    {
+      "name": "Cloudflare",
+      "url": "https://cloudflare-eth.com",
+      "priority": 3
+    }
+  ],
+  "solana": [
+    {
+      "name": "Alchemy",
+      "url": "https://solana-mainnet.g.alchemy.com/v2",
+      "priority": 1,
+      "requiresApiKey": true
+    },
+    {
+      "name": "Solana Mainnet",
+      "url": "https://api.mainnet-beta.solana.com",
+      "priority": 2
+    },
+    {
+      "name": "Ankr",
+      "url": "https://rpc.ankr.com/solana",
+      "priority": 3
+    }
+  ]
+}

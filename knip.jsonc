@@ -1,0 +1,79 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+
+  // ─── Entry points ──────────────────────────────────────────────
+  //
+  // Every file listed (or pattern-matched) here is treated as a
+  // root by knip's reachability graph. From these roots it walks
+  // the import tree and anything it doesn't reach is "dead".
+  //
+  // The Next.js plugin (bundled with knip) handles page.tsx,
+  // layout.tsx, error.tsx, not-found.tsx, loading.tsx, route.ts,
+  // manifest.ts, sitemap.ts, opengraph-image.tsx, and generic
+  // route file conventions automatically. We only list patterns
+  // for files the plugin doesn't know about:
+  //
+  //   - `i18n/routing.ts` and `i18n/navigation.ts` - imported by
+  //     application code, but the module name matches the
+  //     `createNextIntlPlugin('./i18n/request.ts')` string path
+  //     in `next.config.mjs`, which knip picks up for
+  //     request.ts automatically.
+  //   - `scripts/*.js` - CI / build scripts (i18n check,
+  //     dead-code scan, pdf-worker copy, LLM corpus build) that
+  //     don't live in the app tree.
+  "entry": [
+    "i18n/routing.ts",
+    "i18n/navigation.ts",
+    "scripts/*.js"
+  ],
+
+  // ─── Project files ─────────────────────────────────────────────
+  //
+  // Everything knip considers "in scope" - anything outside this
+  // is treated as external and ignored entirely.
+  "project": [
+    "app/**/*.{ts,tsx}",
+    "components/**/*.{ts,tsx}",
+    "lib/**/*.{ts,tsx}",
+    "hooks/**/*.{ts,tsx}",
+    "types/**/*.{ts,tsx}",
+    "i18n/**/*.{ts,tsx}"
+  ],
+
+  // ─── Ignored dependencies ──────────────────────────────────────
+  //
+  // Packages that are genuinely used but knip can't detect the
+  // usage because they're consumed outside the JS import graph:
+  //
+  //   - `autoprefixer` - CSS pipeline via postcss, no JS import.
+  //   - `tailwindcss` - v4's framework package, pulled in by
+  //     `@tailwindcss/postcss` as a peer. No direct JS import.
+  //   - `tw-animate-css` - CSS-only package imported from
+  //     `globals.css` with `@import`, not from JS.
+  //   - `@fontsource-variable/inter`, `@fontsource-variable/outfit`,
+  //     `@fontsource/vt323` - kept for the inter/outfit/vt323 CSS
+  //     variable pipeline, even though the actual font loading
+  //     uses `next/font/local` with woff2 files in /public/fonts.
+  //   - `@eslint/js`, `eslint-plugin-react` - loaded by the flat
+  //     `eslint.config.mjs` which knip's ESLint plugin doesn't
+  //     yet fully parse for plugin discovery.
+  //   - `tailwindcss-animate` - Tailwind plugin, loaded by the
+  //     Tailwind config, not a JS import.
+  "ignoreDependencies": [
+    "autoprefixer",
+    "tailwindcss",
+    "tw-animate-css",
+    "@fontsource-variable/inter",
+    "@fontsource-variable/outfit",
+    "@fontsource/vt323",
+    "@eslint/js",
+    "tailwindcss-animate"
+  ],
+
+  // When an export is only used inside the file that declares it,
+  // treat it as effectively private - don't flag it as "unused
+  // by other modules", because the right fix is "drop the export
+  // keyword", not "delete the symbol". We handle that case with a
+  // manual sweep instead.
+  "ignoreExportsUsedInFile": true
+}

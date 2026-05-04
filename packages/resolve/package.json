@@ -1,0 +1,49 @@
+{
+  "name": "@nimimo/resolve",
+  "version": "0.1.0",
+  "description": "Resolve nimimo handles to blockchain addresses",
+  "author": "Chris Zemmel",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "nimimo",
+    "crypto",
+    "identity",
+    "bitcoin",
+    "ethereum",
+    "solana",
+    "address",
+    "handle",
+    "resolve",
+    "wallet"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/substreak/nimimo",
+    "directory": "packages/resolve"
+  },
+  "homepage": "https://nimimo.com/docs",
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "prepublishOnly": "npm run build"
+  },
+  "devDependencies": {
+    "tsup": "^8.4.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.1"
+  }
+}

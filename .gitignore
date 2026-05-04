@@ -134,3 +134,7 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# Other package managers (pnpm is canonical — see packageManager in package.json)
+bun.lock
+package-lock.json
