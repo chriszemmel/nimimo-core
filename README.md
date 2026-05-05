@@ -242,6 +242,66 @@ I chose AGPL because trust requires transparency. If you run a modified nimimo a
 
 ---
 
+## Commercial Licensing
+
+nimimo is dual-licensed. AGPL-3.0 keeps the open commons honest. A commercial license is available for organizations whose business model is incompatible with the AGPL share-alike obligation — which is most paying customers.
+
+You need the commercial license if you:
+
+- Embed nimimo in a closed-source product
+- Run a modified nimimo as a hosted service for your customers
+- Distribute the resolver inside a proprietary SDK or wallet
+- Want a contract, indemnification, and SLA instead of a community license
+
+### Who this is built for
+
+Concrete fits, in rough order of how cleanly the architecture matches:
+
+- **Exchanges and crypto neobanks** — white-label non-custodial receive layer. Keep your custodial product; give every customer a `@handle` link their friends can pay without installing your app.
+- **Payroll and contractor-payment platforms** (Bitwage-, Deel-style flows) — `@handle` instead of address paste removes the single largest source of payroll-rail support tickets.
+- **Creator-economy platforms** — tip and gated-content links that route directly to the creator's wallet, with no platform-as-custodian step.
+- **Remittance corridors** — recipients hand out a name, not a 42-character address, and the rail stays non-custodial end-to-end.
+- **Telcos and messaging apps** — add a "send money" surface without crossing into money-transmitter territory, because no funds touch your servers.
+- **Governments and central banks running retail CBDC pilots** — the four-axis separation is exactly the *architectural compliance* posture the [regulatory paper](docs/architecture/regulatory-posture.md) describes.
+- **Banks** — narrower fit, real at the corners: corporate-treasury self-custody, employee crypto-payroll rails, private-bank handle directories for crypto-curious wealth clients.
+
+### What the commercial license includes
+
+- Commercial-use rights: closed-source derivatives, hosted services, OEM and white-label distribution
+- A signed dual-license agreement that replaces the AGPL share-alike obligation
+- Patent grant covering the four-axis architecture and the resolver protocol
+- Trademark usage guidelines for "Powered by nimimo" attribution
+- Eligibility for the paid services listed below
+
+### Paid services on top of the license
+
+- **Hosted resolver** — managed `@handle` resolution with SLA, geo-distributed, audited
+- **Audited builds** — third-party-reviewed, signed builds of the cryptographic layer for high-assurance deployments
+- **Custom chain integrations** — beyond BTC / ETH / SOL: Base, Enjin Relay/Matrix, your L2, your CBDC pilot
+- **Security retainer** — incident response, threat-model reviews, key-handling audits
+- **Implementation support** — design-partner engagement during integration
+
+### Indicative pricing
+
+| Tier | Annual license | Fits |
+|------|----------------|------|
+| **Startup** | from $50k | Single product, < 100k MAU, community support |
+| **Production** | $150k–$500k | Unlimited MAU, SLA, audited builds, named support |
+| **Enterprise** | $500k+ | Source escrow, custom chains, security retainer, on-call |
+| **Sovereign / CBDC** | bespoke | Architectural-compliance review, jurisdiction-specific build, deployment partnership |
+
+Ranges are starting points. Final pricing depends on chains, MAU, SLA shape, and support depth. Multi-year and design-partner discounts available.
+
+### Design partner program
+
+A small number of design-partner slots are open at a discount in exchange for public reference status and a seat at the table on the commercial roadmap. If you're an exchange, neobank, payroll platform, creator platform, or central-bank pilot and the architecture matches your problem, this is the cleanest way in.
+
+### Talk to us
+
+Commercial licensing, design-partner inquiries, custom integration, or just the pricing PDF: **[chris@nimimo.com](mailto:chris@nimimo.com)** with `[license]` in the subject. Same-day reply on weekdays.
+
+---
+
 ## The Ethics
 
 > *"If a value matters, it should be enforced by the shape of the system, not by the promises of the people running it."*
@@ -266,9 +326,11 @@ The formal design documents that define nimimo's approach:
 
 I'm Chris. I built nimimo solo because the architecture wouldn't leave me alone.
 
-I'm at a point in my life where I'm open to a lot of shapes. **Hire me onto your team. Bring me on as a contractor or advisor. Build something with me. Fund nimimo's next chapter.** Full-time, fractional, freelance, partnership - if it lets me keep building thoughtfully, I'm interested.
+I'm at a point in my life where I'd genuinely value stability, and I'm open to a lot of shapes to get there. **Hire me full-time onto your team. Bring me on as a contractor or advisor. License nimimo for your exchange, neobank, or wallet. Build something with me. Fund nimimo's next chapter.** Full-time, fractional, freelance, partnership — if it lets me keep building thoughtfully, I'm interested.
 
-Systems thinking is the thread. Designing how the parts fit together so the whole holds up - that's what I do. nimimo is one expression; the same approach has carried me through financial tooling, medical tooling, AI integrations, data pipelines, and dashboards. Anywhere the architecture has to hold the product up. The architecture papers above are a more honest portfolio than any CV - read them, then write to me.
+If you're at **Coinbase, Kraken, Stripe, a neobank, an exchange, a wallet, a creator platform, or anywhere the four-axis problem is sitting unsolved in your stack** — I'd like to talk. The architecture in this repo is a strong signal of how I think; the live product is a stronger signal of how I ship.
+
+Systems thinking is the thread. Designing how the parts fit together so the whole holds up — that's what I do. nimimo is one expression; the same approach has carried me through financial tooling, medical tooling, AI integrations, data pipelines, and dashboards. Anywhere the architecture has to hold the product up. The architecture papers above are a more honest portfolio than any CV — read them, then write to me.
 
 Outside of work, I'd love to hear from anyone who builds carefully and quietly. Argue about the sixteen states. Tell me about something you shipped that nobody noticed yet. Send a hello if any of this resonated. It's lonely here.
 
