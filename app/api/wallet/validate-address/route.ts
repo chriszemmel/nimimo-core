@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import rpcConfig from "@/rpc-config.json"
 import { requireAuth } from "@/lib/auth-guard"
-import { ethAddressQuerySchema, validate } from "@/lib/validation"
+import { addressQuerySchema, validate } from "@/lib/validation"
 import { resolveRPCEndpoint } from "@/lib/adapters/rpc-helpers"
 
 // GET /api/wallet/validate-address?address=<base58>
@@ -14,7 +14,7 @@ export async function GET(request: Request) {
   if (auth.error) return auth.error
 
   const { searchParams } = new URL(request.url)
-  const parsed = validate(ethAddressQuerySchema, { address: searchParams.get("address") ?? "" })
+  const parsed = validate(addressQuerySchema, { address: searchParams.get("address") ?? "" })
   if (parsed.error) return parsed.error
   const { address } = parsed.data
 

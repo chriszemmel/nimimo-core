@@ -1,7 +1,6 @@
 // Cryptographic utilities for ownership layer
-// CRITICAL: This file implements BIP-39 standard exactly as specified
 
-import { BIP39_WORDLIST } from "./bip39-wordlist"
+import * as bip39 from "bip39"
 
 // ============================================================================
 // DEVICE-BOUND ENCRYPTION (KEK₁) - No PIN required for daily use
@@ -87,62 +86,19 @@ async function deriveDeviceBoundKey(): Promise<CryptoKey> {
 }
 
 // ============================================================================
-// BIP-39 MNEMONIC GENERATION (Exact Standard Implementation)
+// BIP-39 MNEMONIC GENERATION
 // ============================================================================
 
 /**
- * Generates a cryptographically secure 24-word BIP-39 mnemonic
- * Uses 256 bits of entropy + 8-bit SHA-256 checksum = 264 bits = 24 words
- *
- * CRITICAL: This follows BIP-39 exactly. Do not modify.
+ * Generates a cryptographically secure 24-word BIP-39 mnemonic.
+ * 256 bits of entropy + 8-bit SHA-256 checksum = 264 bits = 24 words.
  */
 export async function generateSecureSeed(): Promise<string> {
-  // Generate 256 bits (32 bytes) of cryptographically secure entropy
   const entropy = window.crypto.getRandomValues(new Uint8Array(32))
-
-  // Convert entropy to mnemonic using BIP-39 standard
-  const mnemonic = await entropyToMnemonic(entropy)
-
-  return mnemonic
-}
-
-/**
- * Converts entropy to BIP-39 mnemonic following the exact standard:
- * 1. Generate SHA-256 hash of entropy
- * 2. Take first (ENT / 32) bits as checksum (8 bits for 256-bit entropy)
- * 3. Append checksum to entropy
- * 4. Split into 11-bit chunks
- * 5. Map each chunk to wordlist index
- */
-async function entropyToMnemonic(entropy: Uint8Array): Promise<string> {
-  // Step 1: Calculate SHA-256 checksum
-  const hashBuffer = await window.crypto.subtle.digest("SHA-256", entropy as BufferSource)
-  const hashArray = new Uint8Array(hashBuffer)
-
-  // Step 2: Convert entropy to binary string
-  let binaryString = ""
-  for (let i = 0; i < entropy.length; i++) {
-    binaryString += entropy[i].toString(2).padStart(8, "0")
-  }
-
-  // Step 3: Calculate checksum length (ENT / 32)
-  const checksumLengthBits = entropy.length / 4 // 8 bits for 32 bytes
-
-  // Step 4: Extract checksum bits from hash (first 8 bits)
-  const checksumBinary = hashArray[0].toString(2).padStart(8, "0").slice(0, checksumLengthBits)
-
-  // Step 5: Append checksum to entropy
-  const fullBinary = binaryString + checksumBinary
-
-  // Step 6: Split into 11-bit chunks and map to words
-  const words: string[] = []
-  for (let i = 0; i < fullBinary.length; i += 11) {
-    const chunk = fullBinary.slice(i, i + 11)
-    const index = Number.parseInt(chunk, 2)
-    words.push(BIP39_WORDLIST[index])
-  }
-
-  return words.join(" ")
+  const entropyHex = Array.from(entropy)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("")
+  return bip39.entropyToMnemonic(entropyHex)
 }
 
 // ============================================================================
