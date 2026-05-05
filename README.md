@@ -26,6 +26,8 @@ Crypto could feel like email. You send to `@cool-water` and it works - the way y
 
 That's the system in my head. Months of work later, it's also the system in this repo. I love how it turned out. The architecture papers below are the long version - they're the thing I'm proudest of.
 
+**The papers came first.** The four-axes and sixteen-states formalism was written and shared with peers in mid-to-late December 2025, before any of this code existed. The repo is the working-out of those papers, not the other way around. Anyone who wants to verify the order of work can read the papers as the design contract and the code as the implementation against it.
+
 Read the code. Run it. The cryptographic layer is right here, every line of it. The server never holds a key.
 
 ---
