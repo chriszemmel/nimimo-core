@@ -234,6 +234,8 @@ A complete, self-hostable nimimo node, AGPL-3.0:
 
 The repo runs standalone. Clone, set env vars, `pnpm dev`. The SDK at `packages/resolve` is MIT - integrate freely.
 
+> **Note on maintenance:** this repo is the v1.0.0 snapshot of the core architecture and isn't receiving further updates. The live product at nimimo.com continues to evolve, but the open-source `nimimo-core` is frozen as a reference implementation. Forks are welcome.
+
 The live product at **[nimimo.com](https://nimimo.com)** runs this same core plus features that aren't part of the open-source release - custom-chain support beyond BTC/ETH/SOL (Enjin Relay/Matrix and Base today, more on the way), creator monetization (tips, gated content), brand tooling, and a few things still in flight. The core is open. nimimo.com is the active product, and it's still growing.
 
 I chose AGPL because trust requires transparency. If you run a modified nimimo as a service, you must share your changes. Every deployment handling user keys must be auditable.

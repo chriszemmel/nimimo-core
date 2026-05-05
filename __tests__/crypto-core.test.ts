@@ -12,54 +12,8 @@ import bs58 from "bs58"
 import nacl from "tweetnacl"
 import { Wallet } from "ethers"
 import { Buffer } from "buffer"
+import { ripemd160 } from "@noble/hashes/legacy.js"
 import { BIP39_WORDLIST } from "@/lib/ownership/bip39-wordlist"
-
-// ─── Inline RIPEMD-160 (copied from derive.ts for test use) ─────────────
-function ripemd160(data: Uint8Array): Uint8Array {
-  const output = new Uint8Array(20)
-  const K_L = [0x00000000, 0x5a827999, 0x6ed9eba1, 0x8f1bbcdc, 0xa953fd4e]
-  const K_R = [0x50a28be6, 0x5c4dd124, 0x6d703ef3, 0x7a6d76e9, 0x00000000]
-  function f(j: number, x: number, y: number, z: number): number {
-    if (j < 16) return x ^ y ^ z
-    if (j < 32) return (x & y) | (~x & z)
-    if (j < 48) return (x | ~y) ^ z
-    if (j < 64) return (x & z) | (y & ~z)
-    return x ^ (y | ~z)
-  }
-  function rol(n: number, b: number): number {
-    return ((n << b) | (n >>> (32 - b))) >>> 0
-  }
-  const msgLen = data.length
-  const padLen = msgLen + 9 + (64 - ((msgLen + 9) % 64))
-  const padded = new Uint8Array(padLen)
-  padded.set(data)
-  padded[msgLen] = 0x80
-  const view = new DataView(padded.buffer)
-  view.setUint32(padLen - 8, msgLen * 8, true)
-  view.setUint32(padLen - 4, 0, true)
-  let h0 = 0x67452301, h1 = 0xefcdab89, h2 = 0x98badcfe, h3 = 0x10325476, h4 = 0xc3d2e1f0
-  for (let offset = 0; offset < padded.length; offset += 64) {
-    const X = new Uint32Array(16)
-    for (let i = 0; i < 16; i++) X[i] = view.getUint32(offset + i * 4, true)
-    let AL = h0, BL = h1, CL = h2, DL = h3, EL = h4
-    let AR = h0, BR = h1, CR = h2, DR = h3, ER = h4
-    const r_L = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,7,4,13,1,10,6,15,3,12,0,9,5,2,14,11,8,3,10,14,4,9,15,8,1,2,7,0,6,13,11,5,12,1,9,11,10,0,8,12,4,13,3,7,15,14,5,6,2,4,0,5,9,7,12,2,10,14,1,3,8,11,6,15,13]
-    const r_R = [5,14,7,0,9,2,11,4,13,6,15,8,1,10,3,12,6,11,3,7,0,13,5,10,14,15,8,12,4,9,1,2,15,5,1,3,7,14,6,9,11,8,12,2,10,0,4,13,8,6,4,1,3,11,15,0,5,12,2,13,9,7,10,14,12,15,10,4,1,5,8,7,6,2,13,14,0,3,9,11]
-    const s_L = [11,14,15,12,5,8,7,9,11,13,14,15,6,7,9,8,7,6,8,13,11,9,7,15,7,12,15,9,11,7,13,12,11,13,6,7,14,9,13,15,14,8,13,6,5,12,7,5,11,12,14,15,14,15,9,8,9,14,5,6,8,6,5,12,9,15,5,11,6,8,13,12,5,12,13,14,11,8,5,6]
-    const s_R = [8,9,9,11,13,15,15,5,7,7,8,11,14,14,12,6,9,13,15,7,12,8,9,11,7,7,12,7,6,15,13,11,9,7,15,11,8,6,6,14,12,13,5,14,13,13,7,5,15,5,8,11,14,14,6,14,6,9,12,9,12,5,15,8,8,5,12,9,12,5,14,6,8,13,6,5,15,13,11,11]
-    for (let j = 0; j < 80; j++) {
-      let T_L = (AL + f(j, BL, CL, DL) + X[r_L[j]] + K_L[Math.floor(j / 16)]) >>> 0
-      T_L = (rol(T_L, s_L[j]) + EL) >>> 0; AL = EL; EL = DL; DL = rol(CL, 10); CL = BL; BL = T_L
-      let T_R = (AR + f(79 - j, BR, CR, DR) + X[r_R[j]] + K_R[Math.floor(j / 16)]) >>> 0
-      T_R = (rol(T_R, s_R[j]) + ER) >>> 0; AR = ER; ER = DR; DR = rol(CR, 10); CR = BR; BR = T_R
-    }
-    const T = (h1 + CL + DR) >>> 0
-    h1 = (h2 + DL + ER) >>> 0; h2 = (h3 + EL + AR) >>> 0; h3 = (h4 + AL + BR) >>> 0; h4 = (h0 + BL + CR) >>> 0; h0 = T
-  }
-  const result = new DataView(output.buffer)
-  result.setUint32(0, h0, true); result.setUint32(4, h1, true); result.setUint32(8, h2, true); result.setUint32(12, h3, true); result.setUint32(16, h4, true)
-  return output
-}
 
 // ─── Known test vector ──────────────────────────────────────────────────
 // "abandon" x 23 + "art" is the standard BIP-39 test mnemonic for 256-bit entropy.

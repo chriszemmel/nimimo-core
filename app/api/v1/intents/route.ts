@@ -16,12 +16,22 @@ const CORS_HEADERS = {
 /** Default intent expiry: 1 hour from now */
 const DEFAULT_EXPIRY_MS = 60 * 60 * 1000
 
-/** Generate a prefixed random intent ID */
+/** Generate a prefixed random intent ID using a CSPRNG. */
 function generateIntentId(): string {
   const chars = "abcdefghijklmnopqrstuvwxyz0123456789"
+  // Oversample 4x so we can reject biased bytes (>= floor(256/36)*36 = 252)
+  // and still have plenty left to fill 16 slots without re-sampling.
+  const bytes = crypto.getRandomValues(new Uint8Array(64))
   let id = "int_"
-  for (let i = 0; i < 16; i++) {
-    id += chars[Math.floor(Math.random() * chars.length)]
+  for (let i = 0; id.length < 4 + 16 && i < bytes.length; i++) {
+    if (bytes[i] >= 252) continue
+    id += chars[bytes[i] % chars.length]
+  }
+  // Extremely unlikely fallback: top up if rejection sampling left us short.
+  while (id.length < 4 + 16) {
+    const extra = crypto.getRandomValues(new Uint8Array(1))[0]
+    if (extra >= 252) continue
+    id += chars[extra % chars.length]
   }
   return id
 }

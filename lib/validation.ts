@@ -142,8 +142,8 @@ export const ownershipIdQuerySchema = z.object({
   ownership_id: ownershipId,
 })
 
-export const ethAddressQuerySchema = z.object({
-  address: z.string().min(1, "Missing address"),
+export const addressQuerySchema = z.object({
+  address: z.string().min(1, "Missing address").max(256, "Address too long"),
 })
 
 export const avatarQuerySchema = z.object({
