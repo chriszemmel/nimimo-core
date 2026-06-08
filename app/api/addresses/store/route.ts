@@ -24,10 +24,20 @@ export async function POST(request: Request) {
 
     let insertedCount = 0
     for (const addr of addresses) {
+      // First-write-wins per (ownership_id, chain): the address for a chain
+      // is pinned by whoever stores it first. Addresses are deterministic, so
+      // a re-store is a no-op and resolution stays single-valued per chain.
+      // ON CONFLICT still absorbs concurrent identical inserts on the unique
+      // (ownership_id, ownership_version, chain) key.
       const result = await sql`
         INSERT INTO ownership_public_addresses (ownership_id, ownership_version, chain, address)
-        VALUES (${ownership_id}, ${ownership_version}, ${addr.chain}, ${addr.address})
+        SELECT ${ownership_id}, ${ownership_version}, ${addr.chain}, ${addr.address}
+        WHERE NOT EXISTS (
+          SELECT 1 FROM ownership_public_addresses
+          WHERE ownership_id = ${ownership_id} AND chain = ${addr.chain}
+        )
         ON CONFLICT (ownership_id, ownership_version, chain) DO NOTHING
+        RETURNING id
       `
       if (result.length > 0) insertedCount++
     }

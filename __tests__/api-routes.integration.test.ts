@@ -7,6 +7,13 @@
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { NextRequest, NextResponse } from "next/server"
+import { signLinkProof } from "@/lib/identity/link-proof"
+
+// Standard BIP-39 test vectors for proving control of an ownership's seed.
+const SEED_A =
+  "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art"
+const SEED_B =
+  "legal winner thank year wave sausage worth useful legal winner thank year wave sausage worth useful legal winner thank year wave sausage worth title"
 
 // ── Shared state for mocks ──────────────────────────────────────────────
 
@@ -118,6 +125,10 @@ describe("POST /api/identity/assign", async () => {
     setUnauthenticated()
     setOwnershipDenied()
   })
+
+  // Query overrides are module-global; clear them so later suites (which
+  // don't set their own) aren't affected by this suite's routing.
+  afterEach(() => setQueryOverrides([]))
 
   it("returns 401 when unauthenticated", async () => {
     const res = await POST(jsonReq("/api/identity/assign", "POST", {
@@ -258,6 +269,65 @@ describe("POST /api/identity/assign", async () => {
     const data = await res.json()
     expect(data.existed).toBe(false)
     expect(data.handle).toBe("brand-new")
+  })
+
+  // ── Seed-control proof gate ───────────────────────────────────────────
+  // Linking to an ownership that ALREADY has an identity requires proving
+  // control of its seed when the caller isn't already linked.
+  const NONCE = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+
+  it("rejects linking to an existing ownership without proof (403 proof_required)", async () => {
+    setAuthenticated()
+    setQueryOverrides([
+      { match: "update users", rows: [] },                        // CAS lost: caller already has an identity
+      { match: "ownership_users where ownership_id", rows: [] },  // caller not linked to this ownership
+      { match: "select 1 from identities", rows: [{ n: 1 }] },    // ownership already has an identity
+    ])
+
+    const res = await POST(jsonReq("/api/identity/assign", "POST", {
+      ownership_id: VALID_UUID, handle: "cool-water",
+    }))
+    expect(res.status).toBe(403)
+    expect((await res.json()).error).toBe("proof_required")
+  })
+
+  it("rejects a proof whose signer doesn't match a stored address (403 proof_rejected)", async () => {
+    setAuthenticated()
+    setQueryOverrides([
+      { match: "update users", rows: [] },
+      { match: "ownership_users where ownership_id", rows: [] },
+      { match: "select 1 from identities", rows: [{ n: 1 }] },
+      { match: "delete from link_challenges", rows: [{ nonce: NONCE }] }, // nonce consumed
+      { match: "ownership_public_addresses", rows: [] },                  // no stored address matches signer
+    ])
+
+    const signature = await signLinkProof(SEED_B, VALID_UUID, NONCE)
+    const res = await POST(jsonReq("/api/identity/assign", "POST", {
+      ownership_id: VALID_UUID, handle: "cool-water", nonce: NONCE, signature,
+    }))
+    expect(res.status).toBe(403)
+    expect((await res.json()).error).toBe("proof_rejected")
+  })
+
+  it("links to an existing ownership with a valid proof (restore under a new email)", async () => {
+    setAuthenticated()
+    setQueryOverrides([
+      { match: "update users", rows: [{ id: "fresh-user" }] },           // CAS won: caller is a fresh user
+      { match: "ownership_users where ownership_id", rows: [] },          // not linked yet
+      { match: "select 1 from identities", rows: [{ n: 1 }] },            // ownership already has an identity
+      { match: "delete from link_challenges", rows: [{ nonce: NONCE }] }, // nonce consumed
+      { match: "ownership_public_addresses", rows: [{ n: 1 }] },          // signer matches the stored ETH address
+      { match: "select handle, identity_id", rows: [{ handle: "owner-handle", identity_id: "owner-id" }] },
+    ])
+
+    const signature = await signLinkProof(SEED_A, VALID_UUID, NONCE)
+    const res = await POST(jsonReq("/api/identity/assign", "POST", {
+      ownership_id: VALID_UUID, handle: "cool-water", nonce: NONCE, signature,
+    }))
+    expect(res.status).toBe(200)
+    const data = await res.json()
+    expect(data.existed).toBe(true)
+    expect(data.handle).toBe("owner-handle")
   })
 })
 
