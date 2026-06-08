@@ -159,6 +159,7 @@ export class OwnershipManager {
     try {
       const result = await this.identityClient.assignIdentity(ownership_id, {
         initial: options?.initial === true,
+        getMnemonic: (id) => this.getMnemonic(id),
       })
       if (result.existed && result.ownership_id !== ownership_id) {
         log.warn("Identity assign lost race - reconciling to server's canonical ownership", {
@@ -283,7 +284,9 @@ export class OwnershipManager {
   }
 
   async assignIdentity(ownership_id: string): Promise<string> {
-    const result = await this.identityClient.assignIdentity(ownership_id)
+    const result = await this.identityClient.assignIdentity(ownership_id, {
+      getMnemonic: (id) => this.getMnemonic(id),
+    })
     return result.handle
   }
 

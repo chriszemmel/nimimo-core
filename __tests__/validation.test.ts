@@ -79,6 +79,21 @@ describe("identityAssignSchema", () => {
     const result = identityAssignSchema.safeParse({ ownership_id: VALID_UUID, handle: "cool-water", initial: "yes" })
     expect(result.success).toBe(false)
   })
+
+  it("accepts optional nonce + signature", () => {
+    const result = identityAssignSchema.safeParse({
+      ownership_id: VALID_UUID,
+      handle: "cool-water",
+      nonce: "a1b2c3",
+      signature: "0xabc123",
+    })
+    expect(result.success).toBe(true)
+  })
+
+  it("still accepts a payload without nonce/signature", () => {
+    const result = identityAssignSchema.safeParse({ ownership_id: VALID_UUID, handle: "cool-water" })
+    expect(result.success).toBe(true)
+  })
 })
 
 describe("broadcastBtcSchema / broadcastEthSchema", () => {

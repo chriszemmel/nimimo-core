@@ -40,6 +40,14 @@ export const identityAssignSchema = z.object({
   // explicit "add another wallet" flows (OwnershipPrompt) so those still
   // create a new identity.
   initial: z.boolean().optional(),
+  // Seed-control proof, only required when linking to an ownership that
+  // already has an identity (see link-challenge). Signed over public data.
+  nonce: z.string().min(1).max(128).optional(),
+  signature: z.string().min(1).max(256).optional(),
+})
+
+export const linkChallengeSchema = z.object({
+  ownership_id: ownershipId,
 })
 
 export const siteAuthSchema = z.object({

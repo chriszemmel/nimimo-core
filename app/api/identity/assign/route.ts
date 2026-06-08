@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { sql as getSql, ensureMigrations } from "@/lib/db"
 import { requireAuth } from "@/lib/auth-guard"
 import { identityAssignSchema, validate } from "@/lib/validation"
+import { recoverLinkSigner } from "@/lib/identity/link-proof"
 import { logger } from "@/lib/logger"
 
 const log = logger("api/identity")
@@ -17,7 +18,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const parsed = validate(identityAssignSchema, body)
     if (parsed.error) return parsed.error
-    const { ownership_id, handle, initial } = parsed.data
+    const { ownership_id, handle, initial, nonce, signature } = parsed.data
 
     const userId = auth.session.user.id
 
@@ -95,6 +96,51 @@ export async function POST(request: NextRequest) {
         // fall through to create. This is the multi-wallet add path.
       }
       // else: identity exists for this ownership_id - fall through to link.
+    }
+
+    // Seed-control proof gate. Linking a user to an ownership that ALREADY
+    // has an identity is only allowed when the caller proves they control
+    // that ownership's seed - otherwise a session holder could attach
+    // themselves to any publicly-known ownership_id. First-time creation
+    // (no identity yet) and callers who are already linked skip the gate.
+    const alreadyLinked = await sql`
+      SELECT 1 FROM ownership_users WHERE ownership_id = ${ownership_id} AND user_id = ${userId} LIMIT 1
+    `
+    if (alreadyLinked.length === 0) {
+      const identityForOwnership = await sql`
+        SELECT 1 FROM identities WHERE ownership_id = ${ownership_id} LIMIT 1
+      `
+      if (identityForOwnership.length > 0) {
+        if (!nonce || !signature) {
+          return NextResponse.json({ error: "proof_required" }, { status: 403 })
+        }
+
+        // Consume the nonce atomically so each challenge is single-use.
+        const consumed = await sql`
+          DELETE FROM link_challenges
+          WHERE ownership_id = ${ownership_id} AND nonce = ${nonce} AND expires_at > now()
+          RETURNING nonce
+        `
+        if (consumed.length === 0) {
+          return NextResponse.json({ error: "proof_rejected" }, { status: 403 })
+        }
+
+        const signer = recoverLinkSigner(ownership_id, nonce, signature)
+        if (!signer) {
+          return NextResponse.json({ error: "proof_rejected" }, { status: 403 })
+        }
+
+        const match = await sql`
+          SELECT 1 FROM ownership_public_addresses
+          WHERE ownership_id = ${ownership_id}
+            AND chain = 'ethereum'
+            AND lower(address) = lower(${signer})
+          LIMIT 1
+        `
+        if (match.length === 0) {
+          return NextResponse.json({ error: "proof_rejected" }, { status: 403 })
+        }
+      }
     }
 
     // Link the user to this ownership (idempotent)

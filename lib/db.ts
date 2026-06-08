@@ -56,6 +56,15 @@ export async function ensureMigrations(): Promise<void> {
       WHERE has_identity = false
         AND id IN (SELECT DISTINCT user_id FROM ownership_users)
     `
+    // Single-use challenges proving control of an ownership's seed before a
+    // user is linked to an ownership that already has an identity.
+    await db`
+      CREATE TABLE IF NOT EXISTS link_challenges (
+        nonce         TEXT PRIMARY KEY,
+        ownership_id  UUID NOT NULL,
+        expires_at    TIMESTAMPTZ NOT NULL
+      )
+    `
     // Intent layer: structured unsigned payment requests for agent/app coordination
     await db`
       CREATE TABLE IF NOT EXISTS intents (
