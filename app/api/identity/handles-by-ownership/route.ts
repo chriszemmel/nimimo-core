@@ -20,6 +20,13 @@ export async function POST(request: NextRequest) {
     if (!Array.isArray(ownership_ids) || ownership_ids.length === 0 || ownership_ids.length > 20) {
       return NextResponse.json({ error: "ownership_ids must be an array of 1-20 items" }, { status: 400 })
     }
+    // The length was bounded but the elements were never checked, so a
+    // non-UUID made `ANY(...)` fail the uuid cast and answer 500 where it
+    // meant 400. Parameterised either way, so this was never injectable.
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    if (!ownership_ids.every((id) => typeof id === "string" && UUID_RE.test(id))) {
+      return NextResponse.json({ error: "ownership_ids must all be UUIDs" }, { status: 400 })
+    }
 
     // Get identity handles (original assigned handles)
     const rows = await sql`

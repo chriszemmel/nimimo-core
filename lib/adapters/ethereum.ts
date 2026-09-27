@@ -1,5 +1,6 @@
 import rpcConfig from "@/rpc-config.json"
 import type { Transaction } from "@/lib/wallet/types"
+import { blockTimeToMs } from "@/lib/wallet/utils"
 import { logger } from "@/lib/logger"
 import { fetchWithTimeout } from "./fetch-timeout"
 import { resolveRPCEndpoint } from "./rpc-helpers"
@@ -95,9 +96,12 @@ export async function getEthereumTransactions(address: string): Promise<Transact
           : "0"
         const direction: "incoming" | "outgoing" =
           (tx.to ?? "").toLowerCase() === address.toLowerCase() ? "incoming" : "outgoing"
-        const ts = tx.metadata?.blockTimestamp
+        const tsRaw = tx.metadata?.blockTimestamp
           ? new Date(tx.metadata.blockTimestamp).getTime()
           : Date.now()
+        // A malformed blockTimestamp yields an Invalid Date (NaN), which
+        // would crash formatRelativeTime's Intl formatters at render time.
+        const ts = Number.isFinite(tsRaw) ? tsRaw : Date.now()
 
         return {
           hash: tx.hash,
@@ -149,7 +153,7 @@ export async function getEthereumTransactions(address: string): Promise<Transact
         from: tx.from,
         to: tx.to,
         value: valueStr,
-        timestamp: Number(tx.timeStamp) * 1000,
+        timestamp: blockTimeToMs(tx.timeStamp),
         status: tx.isError === "0" ? "success" : "failed",
         blockNumber: Number(tx.blockNumber),
         direction,

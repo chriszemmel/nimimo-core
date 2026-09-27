@@ -1,4 +1,4 @@
-import { formatRelativeTime } from "@/lib/wallet/utils"
+import { formatRelativeTime, blockTimeToMs } from "@/lib/wallet/utils"
 import { backgroundForHandle, generateCroodlesSVG } from "@/lib/croodles/generator"
 
 // Every assertion in this file pins a locale explicitly so the
@@ -76,6 +76,54 @@ describe("formatRelativeTime", () => {
     const result = formatRelativeTime(threeDaysAgo, "de")
     // de: DD.MM.YYYY
     expect(result).toMatch(/^\d{2}\.\d{2}\.\d{4}$/)
+  })
+
+  // ── Non-finite guard ──────────────────────────────────────────
+  // A NaN/Infinity timestamp (an unconfirmed tx with no block time, or a
+  // malformed value from a flaky RPC) must NOT throw - Intl.RelativeTimeFormat
+  // and Intl.DateTimeFormat both raise RangeError on non-finite input, and
+  // that throw used to bubble to the route error boundary and blank the
+  // whole wallet. The function now treats an unknown time as "now".
+  it("does not throw on NaN / Infinity and falls back to 'now'", () => {
+    expect(() => formatRelativeTime(NaN, "en")).not.toThrow()
+    expect(() => formatRelativeTime(Infinity, "en")).not.toThrow()
+    expect(() => formatRelativeTime(-Infinity, "en")).not.toThrow()
+    expect(formatRelativeTime(NaN, "en")).toBe("now")
+    expect(formatRelativeTime(NaN, "de")).toBe("jetzt")
+  })
+})
+
+describe("blockTimeToMs", () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date("2026-03-25T12:00:00Z"))
+  })
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it("converts a valid block time (seconds) to epoch ms", () => {
+    expect(blockTimeToMs(1_700_000_000)).toBe(1_700_000_000_000)
+  })
+
+  it("falls back to now for null / undefined (just-confirmed tx)", () => {
+    const now = Date.now()
+    expect(blockTimeToMs(null)).toBe(now)
+    expect(blockTimeToMs(undefined)).toBe(now)
+  })
+
+  it("falls back to now for malformed / non-finite values", () => {
+    const now = Date.now()
+    expect(blockTimeToMs("not-a-number")).toBe(now)
+    expect(blockTimeToMs(NaN)).toBe(now)
+    expect(blockTimeToMs(0)).toBe(now)
+    expect(blockTimeToMs({})).toBe(now)
+  })
+
+  it("never produces a NaN timestamp that would crash formatRelativeTime", () => {
+    for (const v of [null, undefined, NaN, "x", {}, [], -5]) {
+      expect(Number.isFinite(blockTimeToMs(v))).toBe(true)
+    }
   })
 })
 

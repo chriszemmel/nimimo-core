@@ -1,6 +1,7 @@
 // Client-side Bitcoin adapter for fallback
 import rpcConfig from "@/rpc-config.json"
 import type { Transaction } from "@/lib/wallet/types"
+import { blockTimeToMs } from "@/lib/wallet/utils"
 import { logger } from "@/lib/logger"
 
 const log = logger("bitcoin")
@@ -67,7 +68,7 @@ export async function getBitcoinTransactionsClient(address: string): Promise<Tra
             from: vinArray[0]?.prevout?.scriptpubkey_address || "Unknown",
             to: voutArray[0]?.scriptpubkey_address || "Unknown",
             value: value.toFixed(8),
-            timestamp: ((tx.status as Record<string, unknown>)?.block_time as number) * 1000,
+            timestamp: blockTimeToMs((tx.status as Record<string, unknown>)?.block_time),
             status: (tx.status as Record<string, unknown>)?.confirmed ? "success" : "pending",
             blockNumber: (tx.status as Record<string, unknown>)?.block_height as number,
             direction,

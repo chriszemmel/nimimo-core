@@ -8,6 +8,7 @@
 
 import rpcConfig from "@/rpc-config.json"
 import type { Transaction } from "@/lib/wallet/types"
+import { blockTimeToMs } from "@/lib/wallet/utils"
 import { logger } from "@/lib/logger"
 import { fetchWithTimeout } from "./fetch-timeout"
 import { resolveRPCEndpoint } from "./rpc-helpers"
@@ -202,7 +203,7 @@ export async function getSolanaUsdcTransactions(address: string): Promise<Transa
             from: direction === "incoming" ? counterparty : address,
             to: direction === "incoming" ? address : counterparty,
             value,
-            timestamp: sig.blockTime ? sig.blockTime * 1000 : Date.now(),
+            timestamp: blockTimeToMs(sig.blockTime),
             status: sig.err ? "failed" : "success",
             blockNumber: sig.slot,
             direction,

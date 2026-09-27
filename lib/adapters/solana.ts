@@ -1,10 +1,19 @@
 import rpcConfig from "@/rpc-config.json"
 import type { Transaction } from "@/lib/wallet/types"
+import { blockTimeToMs } from "@/lib/wallet/utils"
 import { logger } from "@/lib/logger"
 import { fetchWithTimeout } from "./fetch-timeout"
 import { resolveRPCEndpoint } from "./rpc-helpers"
 
 const log = logger("solana")
+
+interface SolanaBatchTx {
+  transaction?: { message?: { accountKeys?: Array<{ pubkey: string } | string> } }
+  meta?: { preBalances?: number[]; postBalances?: number[] }
+}
+
+/** What the wallet transaction list reads off a `getTransaction` result. */
+type SolanaTxData = SolanaBatchTx
 
 export async function getSolanaBalance(address: string): Promise<string> {
   const endpoints = rpcConfig.solana.sort((a, b) => a.priority - b.priority)
@@ -105,11 +114,21 @@ export async function getSolanaTransactions(address: string): Promise<Transactio
       const batchData = await batchResponse.json()
       const transactions: Transaction[] = []
 
-      for (let i = 0; i < batchData.length; i++) {
-        const txData = batchData[i]
+      // Keyed on the JSON-RPC `id`, not on array position: pairing
+      // `batchData[i]` with `signatures[i]` assumes the provider preserves
+      // batch order, which JSON-RPC does not require. A reordering provider
+      // would show one transaction's amount under another's hash and
+      // timestamp. `id` is set to `index + 2` when the batch is built.
+      const txByIndex = new Map<number, { result?: SolanaTxData }>()
+      for (const entry of batchData as Array<{ id?: number; result?: SolanaTxData }>) {
+        if (typeof entry?.id === "number") txByIndex.set(entry.id - 2, entry)
+      }
+
+      for (let i = 0; i < signatures.length; i++) {
+        const txData = txByIndex.get(i)
         const sig = signatures[i]
 
-        if (!txData.result) continue
+        if (!txData?.result) continue
 
         try {
           const tx = txData.result
@@ -150,7 +169,7 @@ export async function getSolanaTransactions(address: string): Promise<Transactio
             from,
             to,
             value: amount.toFixed(6),
-            timestamp: sig.blockTime ? sig.blockTime * 1000 : Date.now(),
+            timestamp: blockTimeToMs(sig.blockTime),
             status: sig.err ? "failed" : "success",
             blockNumber: sig.slot,
             direction,

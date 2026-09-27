@@ -207,13 +207,82 @@ export function estimateBtcFee(numInputs = 1, feeRateSatPerVbyte = 5): bigint {
   return BigInt(vbytes * feeRateSatPerVbyte)
 }
 
-/** Fetches confirmed UTXOs for a Bitcoin address via the server proxy. */
+/**
+ * Fetches UTXOs for a Bitcoin address via the server proxy. Returns both
+ * confirmed and unconfirmed outputs - coin selection ({@link selectBitcoinUtxos})
+ * is responsible for preferring confirmed coins and only dipping into
+ * unconfirmed ones (typically the wallet's own change still in the mempool)
+ * when the confirmed set can't cover the send.
+ */
 export async function fetchBitcoinUTXOs(address: string): Promise<BitcoinUTXO[]> {
   const { apiFetch } = await import("@/lib/api-fetch")
   const res = await apiFetch(`/api/wallet/utxos?address=${encodeURIComponent(address)}`)
   const data = await res.json()
   if (!res.ok || data.error) throw new Error(data.error || "Failed to fetch UTXOs")
-  return (data.utxos as BitcoinUTXO[]).filter((u) => u.status.confirmed)
+  return data.utxos as BitcoinUTXO[]
+}
+
+export interface CoinSelection {
+  selected: BitcoinUTXO[]
+  /** Sum of the selected inputs, in sats. */
+  totalIn: bigint
+}
+
+/**
+ * Picks UTXOs to fund a `satoshis` send. Two layered strategies:
+ *
+ *  1. **Confirmed first.** Unconfirmed coins are only used when the confirmed
+ *     set can't cover the send. Otherwise a tiny pending tx that consumed a
+ *     large coin (leaving its change unconfirmed) would strand the rest of
+ *     the balance - the exact "I have 12k but can't send 8k" bug.
+ *  2. **Smallest-single-fit, then largest-first.** Within a candidate set we
+ *     first look for the smallest single UTXO that covers the send on its
+ *     own, so a small payment doesn't lock up a large coin (which would then
+ *     sit as unconfirmed change and reproduce the problem). When no single
+ *     coin suffices we accumulate largest-first to minimise the input count
+ *     (and therefore the fee).
+ *
+ * Returns null when even the full set (confirmed + unconfirmed) can't cover
+ * `satoshis` plus the fee.
+ */
+function selectFrom(
+  utxos: BitcoinUTXO[],
+  satoshis: bigint,
+  feeRateSatPerVbyte: number,
+): CoinSelection | null {
+  // 1. Smallest single UTXO that alone covers the amount + a 1-input fee.
+  const oneInputFee = estimateBtcFee(1, feeRateSatPerVbyte)
+  const ascending = [...utxos].sort((a, b) => a.value - b.value)
+  for (const u of ascending) {
+    if (BigInt(u.value) >= satoshis + oneInputFee) {
+      return { selected: [u], totalIn: BigInt(u.value) }
+    }
+  }
+  // 2. No single coin is enough - accumulate largest-first.
+  const descending = [...utxos].sort((a, b) => b.value - a.value)
+  const selected: BitcoinUTXO[] = []
+  let totalIn = 0n
+  for (const u of descending) {
+    selected.push(u)
+    totalIn += BigInt(u.value)
+    if (totalIn >= satoshis + estimateBtcFee(selected.length, feeRateSatPerVbyte)) {
+      return { selected, totalIn }
+    }
+  }
+  return null
+}
+
+/** Coin selection with confirmed-first preference. See {@link selectFrom}. */
+export function selectBitcoinUtxos(
+  utxos: BitcoinUTXO[],
+  satoshis: bigint,
+  feeRateSatPerVbyte = 5,
+): CoinSelection | null {
+  const confirmed = utxos.filter((u) => u.status.confirmed)
+  return (
+    selectFrom(confirmed, satoshis, feeRateSatPerVbyte) ??
+    selectFrom(utxos, satoshis, feeRateSatPerVbyte)
+  )
 }
 
 /**
@@ -231,28 +300,21 @@ export async function buildAndSignBitcoinTransfer(params: {
 
   const { privKey, pubKey, pubKeyHash } = await deriveBitcoinKey(mnemonic)
 
-  // Fetch confirmed UTXOs
+  // Fetch UTXOs (confirmed + unconfirmed) and select coins.
   const allUtxos = await fetchBitcoinUTXOs(fromAddress)
-  if (allUtxos.length === 0) throw new Error("No confirmed UTXOs available")
+  if (allUtxos.length === 0) throw new Error("No UTXOs available")
 
-  // Greedy coin selection (largest-first)
-  const sorted = [...allUtxos].sort((a, b) => b.value - a.value)
-  const selected: BitcoinUTXO[] = []
-  let totalIn = 0n
-
-  for (const utxo of sorted) {
-    selected.push(utxo)
-    totalIn += BigInt(utxo.value)
-    const fee = estimateBtcFee(selected.length, feeRateSatPerVbyte)
-    if (totalIn >= satoshis + fee) break
-  }
-
-  const fee = estimateBtcFee(selected.length, feeRateSatPerVbyte)
-  if (totalIn < satoshis + fee) {
+  const selection = selectBitcoinUtxos(allUtxos, satoshis, feeRateSatPerVbyte)
+  if (!selection) {
+    const total = allUtxos.reduce((sum, u) => sum + BigInt(u.value), 0n)
+    const need = satoshis + estimateBtcFee(allUtxos.length, feeRateSatPerVbyte)
     throw new Error(
-      `Insufficient balance: have ${totalIn} sats, need ${satoshis + fee} sats (incl. fee)`
+      `Insufficient balance: have ${total} sats, need ${need} sats (incl. fee)`
     )
   }
+
+  const { selected, totalIn } = selection
+  const fee = estimateBtcFee(selected.length, feeRateSatPerVbyte)
 
   let changeAmount = totalIn - satoshis - fee
 
