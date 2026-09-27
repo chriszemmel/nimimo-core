@@ -6,15 +6,80 @@
 
 <p align="center">
   <b>Non-custodial crypto identity for humans.</b><br/>
-  Built in the open, by one person, over many months.
+  One link, <code>nimimo.com/@you</code>, receives Bitcoin, Ethereum, Solana and USDC.<br/>
+  The keys are made in your browser and never leave it.
 </p>
 
 <p align="center">
+  <a href="https://github.com/chriszemmel/nimimo-core/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/chriszemmel/nimimo-core/ci.yml?branch=main&label=CI" alt="CI" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-blue" alt="AGPL-3.0" /></a>
-  <img src="https://img.shields.io/badge/tests-169%2F169-brightgreen" alt="Tests passing" />
   <img src="https://img.shields.io/badge/TypeScript-strict-blue" alt="TypeScript strict" />
   <img src="https://img.shields.io/badge/chains-BTC%20%7C%20ETH%20%7C%20SOL-orange" alt="Bitcoin Ethereum Solana" />
+  <a href="packages/resolve"><img src="https://img.shields.io/badge/SDK-MIT-green" alt="SDK MIT" /></a>
 </p>
+
+<p align="center">
+  <a href="https://nimimo.com"><b>nimimo.com</b></a> ·
+  <a href="#screenshots">Screenshots</a> ·
+  <a href="#the-architecture-four-axes-sixteen-states">Architecture</a> ·
+  <a href="#run-it-yourself">Run it</a> ·
+  <a href="#sdk">SDK</a> ·
+  <a href="#commercial-licensing">Licensing</a>
+</p>
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/web-profile-dark.png" />
+    <img src="docs/screenshots/web-profile-light.png" alt="A public nimimo profile at nimimo.com/@chris: one link with a Bitcoin, Ethereum and Solana address behind it" width="100%" />
+  </picture>
+</p>
+
+You share a name, not a wallet address. Whoever opens the link picks a
+chain and pays; nobody installs anything, and nothing in between ever holds
+the money.
+
+<p align="center">
+  <img src="docs/screenshots/phones.png" alt="nimimo on a phone: the home page, a public profile, a Bitcoin receiving address with its QR code, and how the keys stay on the device" width="100%" />
+</p>
+
+## Screenshots
+
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/web-home-dark.png" />
+        <img src="docs/screenshots/web-home-light.png" alt="The home page: receive crypto in seconds, no apps, no exchanges, no setup" />
+      </picture>
+      <p align="center"><sub><b>Get a name</b>: no app, no exchange, no seed phrase to write down</sub></p>
+    </td>
+    <td width="50%" valign="top">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/web-address-dark.png" />
+        <img src="docs/screenshots/web-address-light.png" alt="A Bitcoin receiving address on a profile, with a QR code, copy and save buttons" />
+      </picture>
+      <p align="center"><sub><b>Receive</b>: every chain's address behind one link, with a QR code</sub></p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/web-recovery-dark.png" />
+        <img src="docs/screenshots/web-recovery-light.png" alt="Lose your phone, keep your crypto: recovery as a designed feature, an encrypted file and a PIN" />
+      </picture>
+      <p align="center"><sub><b>Recovery</b>: an encrypted file and a PIN, never held by the server</sub></p>
+    </td>
+    <td width="50%" valign="top">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/web-safe-dark.png" />
+        <img src="docs/screenshots/web-safe-light.png" alt="Safe by default: keys stay on the device, recovery is designed in, the core is open" />
+      </picture>
+      <p align="center"><sub><b>Safe by default</b>: the server never holds a key</sub></p>
+    </td>
+  </tr>
+</table>
+
+<p align="center"><sub>Taken from <a href="https://nimimo.com">nimimo.com</a>, which runs this core, by <code>node scripts/screenshots.mjs</code>. The Enjin row on the profile is one of the chains nimimo.com adds on top of it.</sub></p>
 
 ---
 
@@ -177,7 +242,7 @@ pnpm install
 pnpm dev
 ```
 
-This is the **complete application**. Not a demo. Not a subset. The same code that runs nimimo.com.
+This is the **complete application**. Not a demo. Not a subset. It is the core nimimo.com runs on, without the features listed under [What's in this repo](#whats-in-this-repo).
 
 ---
 
@@ -210,7 +275,7 @@ MIT-licensed. Zero dependencies. 3KB gzipped. Integrate into any wallet.
 | Auth | NextAuth (Google OAuth + Email Magic Link) |
 | Storage | Cloudflare R2 |
 | RPCs | Alchemy, Blockstream, Cloudflare, 1RPC |
-| Testing | Vitest - 169 tests, 0 failures |
+| Testing | Vitest, run in CI on every push |
 | CI | GitHub Actions (lint + typecheck + test + build) |
 | Built with | Claude Code |
 
@@ -234,7 +299,7 @@ A complete, self-hostable nimimo node, AGPL-3.0:
 
 The repo runs standalone. Clone, set env vars, `pnpm dev`. The SDK at `packages/resolve` is MIT - integrate freely.
 
-> **Note on maintenance:** this repo is the v1.0.0 snapshot of the core architecture and isn't receiving further updates. The live product at nimimo.com continues to evolve, but the open-source `nimimo-core` is frozen as a reference implementation. Forks are welcome.
+> **Note on maintenance:** nimimo.com moves faster than this repository. Fixes to the shared core (wallet, key derivation, recovery, dependencies) are brought over here; product features stay on nimimo.com. Forks are welcome.
 
 The live product at **[nimimo.com](https://nimimo.com)** runs this same core plus features that aren't part of the open-source release - custom-chain support beyond BTC/ETH/SOL (Enjin Relay/Matrix and Base today, more on the way), creator monetization (tips, gated content), brand tooling, and a few things still in flight. The core is open. nimimo.com is the active product, and it's still growing.
 
