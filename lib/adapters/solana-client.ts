@@ -1,6 +1,7 @@
 // Client-side Solana adapter for fallback
 import rpcConfig from "@/rpc-config.json"
 import type { Transaction } from "@/lib/wallet/types"
+import { blockTimeToMs } from "@/lib/wallet/utils"
 import { logger } from "@/lib/logger"
 
 const log = logger("solana")
@@ -136,7 +137,7 @@ export async function getSolanaTransactionsClient(address: string): Promise<Tran
             from,
             to,
             value: amount.toFixed(6),
-            timestamp: sig.blockTime ? sig.blockTime * 1000 : Date.now(),
+            timestamp: blockTimeToMs(sig.blockTime),
             status: sig.err ? "failed" : "success",
             blockNumber: sig.slot,
             direction,

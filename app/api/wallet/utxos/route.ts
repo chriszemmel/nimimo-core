@@ -23,10 +23,16 @@ export async function GET(request: Request) {
 
   // Try Blockstream
   try {
-    const res = await fetch(`https://blockstream.info/api/address/${address}/utxo`, {
-      headers: { Accept: "application/json" },
-      next: { revalidate: 30 },
-    })
+    // Encoded: the schema allows any string up to 256 chars, so an
+    // unencoded value could break out of the path segment and steer the
+    // request elsewhere on the host.
+    const res = await fetch(
+      `https://blockstream.info/api/address/${encodeURIComponent(address)}/utxo`,
+      {
+        headers: { Accept: "application/json" },
+        next: { revalidate: 30 },
+      },
+    )
     if (res.ok) {
       const utxos: UTXO[] = await res.json()
       return NextResponse.json({ utxos })
@@ -38,7 +44,7 @@ export async function GET(request: Request) {
   // Fallback: Blockcypher
   try {
     const res = await fetch(
-      `https://api.blockcypher.com/v1/btc/main/addrs/${address}?unspentOnly=true&includeScript=false`,
+      `https://api.blockcypher.com/v1/btc/main/addrs/${encodeURIComponent(address)}?unspentOnly=true&includeScript=false`,
       { headers: { Accept: "application/json" }, next: { revalidate: 30 } },
     )
     if (res.ok) {

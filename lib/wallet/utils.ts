@@ -22,7 +22,15 @@
  */
 export function formatRelativeTime(timestamp: number, locale: string): string {
   const now = Date.now()
-  const diff = now - timestamp
+  // A non-finite timestamp (NaN / Infinity) - an unconfirmed tx with no
+  // block time yet, or a malformed value from a flaky RPC - would make
+  // `Intl.RelativeTimeFormat` / `Intl.DateTimeFormat` below throw a
+  // RangeError. That throw bubbles to the route error boundary and blanks
+  // the entire wallet ("Something went wrong"). Treat an unknown time as
+  // "now": a freshly-broadcast transfer is, in practice, just-happened, so
+  // it's the least-surprising label and keeps the render crash-proof.
+  const ts = Number.isFinite(timestamp) ? timestamp : now
+  const diff = now - ts
   const seconds = Math.floor(diff / 1000)
   const minutes = Math.floor(seconds / 60)
   const hours = Math.floor(minutes / 60)
@@ -59,5 +67,21 @@ export function formatRelativeTime(timestamp: number, locale: string): string {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
-  }).format(new Date(timestamp))
+  }).format(new Date(ts))
+}
+
+/**
+ * Convert a chain "block time" (seconds since epoch, as returned by Solana's
+ * `getSignaturesForAddress` or a Bitcoin block) into epoch milliseconds.
+ *
+ * RPCs return `null` for a just-confirmed transaction whose block time
+ * hasn't been computed yet, and a misbehaving/fallback endpoint can return a
+ * non-numeric value. Either way the safe answer is "now": the only callers
+ * are transaction lists where an unknown time means the entry is brand new.
+ * Returning `Date.now()` instead of `NaN` keeps a malformed value from
+ * reaching `formatRelativeTime` and crashing the wallet render.
+ */
+export function blockTimeToMs(blockTimeSeconds: unknown): number {
+  const n = Number(blockTimeSeconds)
+  return Number.isFinite(n) && n > 0 ? n * 1000 : Date.now()
 }

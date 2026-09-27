@@ -1,5 +1,6 @@
 import rpcConfig from "@/rpc-config.json"
 import type { Transaction } from "@/lib/wallet/types"
+import { blockTimeToMs } from "@/lib/wallet/utils"
 import { logger } from "@/lib/logger"
 import { fetchWithTimeout } from "./fetch-timeout"
 import { resolveRPCEndpoint } from "./rpc-helpers"
@@ -89,7 +90,7 @@ export async function getBitcoinTransactions(address: string): Promise<Transacti
             from: vinArray[0]?.prevout?.scriptpubkey_address || "Unknown",
             to: voutArray[0]?.scriptpubkey_address || "Unknown",
             value: value.toFixed(8),
-            timestamp: ((tx.status as Record<string, unknown>)?.block_time as number) * 1000,
+            timestamp: blockTimeToMs((tx.status as Record<string, unknown>)?.block_time),
             status: (tx.status as Record<string, unknown>)?.confirmed ? "success" : "pending",
             blockNumber: (tx.status as Record<string, unknown>)?.block_height as number,
             direction,
@@ -109,13 +110,14 @@ export async function getBitcoinTransactions(address: string): Promise<Transacti
 
         const transactions: Transaction[] = txRefs.map((tx: { tx_hash: string; tx_output_n: number; value?: number; confirmed: string; confirmations: number; block_height: number }) => {
           const direction: "incoming" | "outgoing" = tx.tx_output_n >= 0 ? "incoming" : "outgoing"
+          const confirmedMs = new Date(tx.confirmed).getTime()
 
           return {
             hash: tx.tx_hash,
             from: "Unknown",
             to: "Unknown",
             value: ((tx.value || 0) / 100000000).toFixed(8),
-            timestamp: new Date(tx.confirmed).getTime(),
+            timestamp: Number.isFinite(confirmedMs) ? confirmedMs : Date.now(),
             status: tx.confirmations > 0 ? "success" : "pending",
             blockNumber: tx.block_height,
             direction,
